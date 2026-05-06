@@ -1,0 +1,9 @@
+params;model;level type;experiment;resolution;temporal extent;activity;typeOfSimulation
+167/228;IFS-NEMO;sfc;hist;high;1990-2001;CMIP6;Historical simulation
+167;ICON;sfc;hist;high;1990-2019;CMIP6;Historical simulation
+167/228;IFS-NEMO;sfc;SSP3-7.0;high;2020-2050;ScenarioMIP;Future projection
+167;ICON;sfc;SSP3-7.0;high;2020-2050;ScenarioMIP;Future projection
+167/228;IFS-NEMO;sfc;cont;high;1990-2007;HighResMIP;Control simulation
+167/228;IFS-FESOM;sfc;cont;high;2017-2023;story-nudging;Storyline simulation
+167/228;IFS-FESOM;sfc;hist;high;2017-2023;story-nudging;Storyline simulation
+167/228;IFS-FESOM;sfc;Tplus2.0K;high;2017-2023;story-nudging;Storyline simulation

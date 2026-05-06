@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: snow-depth
+  namespace: default
+spec:
+  arguments:
+    parameters:
+      - name: S3_KEY
+        value: ""
+      - name: S3_SECRET
+        value: ""
+      - name: DESP_USER
+        value: ""
+      - name: DESP_PASS
+        value: ""
+  entrypoint: run-snow-depth
+  templates:
+    - name: run-snow-depth
+      container:
+        name: main
+        image: ghcr.io/koenifra/snow-depth:latest
+        command:
+          - python
+        args:
+          - SnowDepth.py
+        env:
+          - name: S3_KEY
+            value: "{{workflow.parameters.S3_KEY}}"
+          - name: S3_SECRET
+            value: "{{workflow.parameters.S3_SECRET}}"
+          - name: DESP_USER
+            value: "{{workflow.parameters.DESP_USER}}"
+          - name: DESP_PASS
+            value: "{{workflow.parameters.DESP_PASS}}"
+  ttlStrategy:
+    secondsAfterCompletion: 300
+  podGC:
+    strategy: OnPodCompletion
