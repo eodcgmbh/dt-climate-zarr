@@ -1,0 +1,10 @@
+earthkit-data
+pandas
+xarray
+zarr>=3.0.0
+s3fs
+polytope-client
+numpy
+conflator
+lxml
+covjsonkit

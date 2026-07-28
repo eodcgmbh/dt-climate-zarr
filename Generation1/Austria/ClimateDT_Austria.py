@@ -29,7 +29,8 @@ SCENARIOS_PATH = "destine-climate-dt/climate_dt_scenarios_sorted.csv"
 POINTS_FOLDER = "destine-climate-dt/points/"
 
 MAX_WORKERS = 25
-STATION_LIMIT = None  # set to an integer to process only a subset of stations
+START_INDEX = 0
+STATION_LIMIT = 2050  # set to an integer to process only a subset of stations
 
 
 # ---------------------------------------------------------------------------
@@ -114,7 +115,7 @@ def extract_cdt_ts(
     request = {
         "class": "d1",
         "dataset": "climate-dt",
-        "generation": "1",
+        "generation": "2",
         "expver": "0001",
         "stream": "clte",
         "type": "fc",
@@ -237,7 +238,9 @@ def process_scenario(scenario: pd.Series, eodc_s3: s3fs.S3FileSystem) -> None:
         print(f"[ERROR] Could not load points file {points_path}: {e}", flush=True)
         return
 
-    subset = points.iloc[:STATION_LIMIT] if STATION_LIMIT is not None else points
+    # subset = points.iloc[:STATION_LIMIT] if STATION_LIMIT is not None else points
+    subset = points.iloc[START_INDEX:START_INDEX + STATION_LIMIT] if STATION_LIMIT is not None else points.iloc[START_INDEX:]
+
 
     store_path = (
         f"destine-climate-dt/Austria/"
@@ -321,7 +324,7 @@ def main() -> None:
     print(scenarios, flush=True)
 
     # 4. Process each scenario
-    for _, scenario in scenarios.iloc[:1].iterrows():
+    for _, scenario in scenarios.iloc[3:4].iterrows():
         process_scenario(scenario, eodc_s3)
 
     print("\nAll scenarios completed!", flush=True)
