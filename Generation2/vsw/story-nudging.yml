@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: vsw-story-nudging
+  namespace: cgls
+spec:
+  arguments:
+    parameters:
+      - name: S3_KEY
+        value: ""
+      - name: S3_SECRET
+        value: ""
+      - name: DESP_USER
+        value: ""
+      - name: DESP_PASS
+        value: ""
+  entrypoint: run-vsw-story-nudging
+  templates:
+    - name: run-vsw-story-nudging
+      container:
+        name: main
+        image: ghcr.io/koenifra/vsw-story-nudging:latest
+        imagePullPolicy: Always
+        args:
+          - --desp-user
+          - "{{workflow.parameters.DESP_USER}}"
+          - --desp-password
+          - "{{workflow.parameters.DESP_PASS}}"
+          - --s3-key
+          - "{{workflow.parameters.S3_KEY}}"
+          - --s3-secret
+          - "{{workflow.parameters.S3_SECRET}}"
+  ttlStrategy:
+    secondsAfterCompletion: 300
+  podGC:
+    strategy: OnPodCompletion

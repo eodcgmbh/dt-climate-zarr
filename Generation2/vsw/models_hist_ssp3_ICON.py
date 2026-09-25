@@ -20,7 +20,9 @@ import warnings
 
 import earthkit.data
 import earthkit.geo.cartography
+import rioxarray  # noqa: F401 -- registers the .rio accessor on xarray objects
 import s3fs
+from shapely.geometry import Polygon
 
 from polytope_zarr import PolytopeZarrStore
 
@@ -28,12 +30,28 @@ from polytope_zarr import PolytopeZarrStore
 MODELS = ["ICON"]
 LEVELS = [1, 2, 3]
 COUNTRY = "Austria"
-S3_PATH = "destine-climate-dt/vsw/netcdf/ICON2"
+S3_PATH = "destine-climate-dt/vsw/netcdf/ICON"
 CHUNK_YEARS = 1
+
+# North, West, South, East - MARS area order. Used with the "area" keyword
+# (server-side regridding to a regular lat/lon grid) instead of the
+# "feature: polygon" path, which hits the grid-hash-mismatch bug for ICON.
+AREA = [49.0758, 9.4979, 46.308, 17.2416]
+
+# EXPERIMENTS = {
+#     "hist": {
+#         "start_year": 1990,
+#         "end_year": 2014,
+#     },
+#     "SSP3-7.0": {
+#         "start_year": 2015,
+#         "end_year": 2049,
+#     },
+# }
 
 EXPERIMENTS = {
     "hist": {
-        "start_year": 1990,
+        "start_year": 1992,
         "end_year": 2014,
     },
     "SSP3-7.0": {
@@ -41,7 +59,6 @@ EXPERIMENTS = {
         "end_year": 2049,
     },
 }
-
 
 def year_chunks(start_year, end_year, chunk_size):
     """Split [start_year, end_year] into consecutive chunk_size-year ranges."""
@@ -97,6 +114,7 @@ def main():
     )
 
     shapes = earthkit.geo.cartography.country_polygons([COUNTRY], resolution=50e6)
+    austria_polygon = Polygon([(lon, lat) for lat, lon in shapes[0]])
 
     failures = []
 
@@ -125,7 +143,12 @@ def main():
                             model=model,
                             time=time_slice,
                             level=level,
-                            polygon=shapes,
+                            area=AREA,
+                        )
+                        vsw = (
+                            vsw.rio.write_crs("EPSG:4326")
+                            .rio.set_spatial_dims(x_dim="longitude", y_dim="latitude")
+                            .rio.clip([austria_polygon], crs="EPSG:4326")
                         )
                         data_bytes = vsw.to_netcdf()
                         out_path = (

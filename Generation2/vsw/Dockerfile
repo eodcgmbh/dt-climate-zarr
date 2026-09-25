@@ -15,6 +15,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/desp-authentication.py src/desp-authentication.py
 COPY polytope_zarr.py .
 COPY destine_portfolio.py .
-COPY models_hist_ssp3.py .
+COPY story-nudging-sd.py .
 
-ENTRYPOINT ["python", "models_hist_ssp3.py"]
+ENTRYPOINT ["python", "story-nudging-sd.py"]

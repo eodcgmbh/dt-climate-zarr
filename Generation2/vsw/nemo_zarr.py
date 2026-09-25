@@ -1,15 +1,18 @@
 """
-Consolidate the 180 IFS-FESOM vsw NetCDFs (produced by models_hist_ssp3.py:
+Consolidate the IFS-NEMO vsw NetCDFs (produced by models_hist_ssp3.py:
 2 experiments x 3 levels x yearly chunks - 25 years for "hist", 35 years
-for "SSP3-7.0") into a single zarr3 store on S3, called IFS-FESOM.zarr.
+for "SSP3-7.0") into a single zarr3 store on S3, called IFS-NEMO.zarr.
 
 Store layout:
-  IFS-FESOM.zarr/
+  IFS-NEMO.zarr/
     hist/1, hist/2, hist/3
     SSP3-7.0/1, SSP3-7.0/2, SSP3-7.0/3
 
 Each leaf group holds the full experiment timerange, built by
-concatenating the per-year NetCDFs along "time".
+concatenating the per-year NetCDFs along "time". Unlike ICON, these
+NetCDFs already have a proper "points" dimension (with latitude,
+longitude, levelist coords), so no stacking/schema-repair is needed -
+only missing years get filled with NaN.
 """
 import io
 
@@ -21,10 +24,10 @@ import xarray as xr
 S3_KEY = ""
 S3_SECRET = ""
 
-NETCDF_PATH = "destine-climate-dt/vsw/netcdf/ICON2"
-ZARR_PATH = "destine-climate-dt/vsw/zarr/ICON2.zarr"
+NETCDF_PATH = "destine-climate-dt/vsw/netcdf/NEMO"
+ZARR_PATH = "destine-climate-dt/vsw/zarr/IFS-NEMO.zarr"
 
-MODEL = "ICON"
+MODEL = "IFS-NEMO"
 LEVELS = [1, 2, 3]
 
 EXPERIMENTS = {
@@ -40,14 +43,17 @@ def read_netcdf(eodc_s3, path):
 
 def make_nan_year(template, year):
     """Build a NaN-filled placeholder for a missing year's file, matching
-    template's grid (same latitude/longitude, daily timestamps at 12:00)."""
+    template's points (same latitude/longitude/levelist), daily timestamps
+    at 12:00."""
     time_index = pd.date_range(f"{year}-01-01T12:00:00", f"{year}-12-31T12:00:00", freq="D")
     nan_vsw = xr.full_like(template["vsw"].isel(time=0), np.nan).expand_dims(time=time_index)
     return xr.Dataset(
         {"vsw": nan_vsw},
         coords={
+            "points": template["points"],
             "latitude": template["latitude"],
             "longitude": template["longitude"],
+            "levelist": template["levelist"],
         },
     )
 
@@ -82,10 +88,6 @@ def main():
                 yearly.append(ds_year)
 
             combined = xr.concat(yearly, dim="time")
-            # These files are already point-based (time, points) with
-            # latitude/longitude/levelist as 1-D coords along "points",
-            # matching the FESOM/NEMO schema directly - no CRS cleanup or
-            # (latitude, longitude) stacking needed.
             combined = combined.chunk({"time": 100, "points": -1})
             group = f"{experiment}/{level}"
             # zarr3's FSMap-backed stores don't support to_zarr(..., group=...)

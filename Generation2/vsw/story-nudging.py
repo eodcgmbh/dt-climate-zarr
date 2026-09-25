@@ -23,10 +23,10 @@ REALIZATIONS = [1, 2, 3, 4, 5]
 CLIMATES = ["cont", "hist", "Tplus2.0K"]
 LEVELS = [1, 2, 3]
 COUNTRY = "Austria"
-START_DATE = "2017-01-01T00:00:00"
-END_DATE = "2025-12-31T23:00:00"
-TIME_SLICE = slice("2017-01-01", "2025-12-31")
-S3_PATH = "destine-climate-dt/vsw/netcdf"
+START_DATE = "2026-01-01T00:00:00"
+END_DATE = "2026-07-31T23:00:00"
+TIME_SLICE = slice("2026-01-01", "2026-07-31")
+S3_PATH = "destine-climate-dt/vsw/netcdf/SN"
 
 
 def parse_args():
